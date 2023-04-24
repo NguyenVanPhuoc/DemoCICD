@@ -1,0 +1,75 @@
+# Khai báo phiên bản của docker compose file
+# Để format file
+version: '3'
+services:
+  #PHP
+  php-fpm:
+    # Đặt tên cho container chứa source code
+    container_name: laravel_CICD
+    # Đường dẫn tới folder chứa config build dự án laravel
+    build:
+      context: ./php
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../DemoCICD:/var/www
+    # Setting network để các container giao tiếp với nhau
+    networks:
+      - app-networks
+  #NGINX
+  nginx:
+    container_name: nginx
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Tham chiếu file config nginx của mình vào môi trường ảo nginx
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      # Tham chiếu source của mình vào trong môi trường ảo docker
+      - ../../../DemoCICD:/var/www
+    working_dir: /var/www
+    ports:
+      - 8095:80
+    # Setting network để các container giao tiếp với nhau
+    networks:
+      - app-networks
+  #MYSQL
+  mysql:
+    # Đặt tên cho container chứa Mysql
+    container_name: db-laravel-cicd
+    # Đường dẫn tới folder chứa config build Mysql
+    build:
+      context: ./mysql
+      dockerfile: Dockerfile
+    # Config port của Mysql
+    ports:
+      - 23306:3306
+    # Setup tên database và password cho root user
+    environment:
+      MYSQL_DATABASE: db_cicd
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: docker
+    # Set bộ ký tự cho dữ liệu
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # Tham chiếu DB đã build khi start lại docker
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/sql:/docker-entrypoint-initdb.d
+    # Setting network để các container giao tiếp với nhau
+    networks:
+      - app-networks
+  phpmyadmin:
+    container_name: cicd_phpmyadmin
+    image: phpmyadmin/phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOSTS=db-laravel-cicd
+      - PMA_USER=root
+      - PMA_PASSWORD=root
+    ports:
+      - 8096:80
+    networks:
+      - app-networks
+networks:
+  app-networks:
+    driver: bridge
