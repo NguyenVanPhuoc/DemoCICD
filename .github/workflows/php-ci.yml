@@ -1,18 +1,21 @@
-name: php-ci
+name: PHP CI
 
 on:
   pull_request:
-    branches: [ "master" ]
-    types: [ closed ]
+    branches:
+      - master
+
 jobs:
-  deploy:
-    name: build
-    if: github.event.pull_request.merged == true
+  build:
     runs-on: ubuntu-latest
+
     steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-ansi --no-interaction --no-progress --no-scripts
-    - name: Deploy code
-      run: |
-        ssh -o "StrictHostKeyChecking no" user@server "cd ../../democicd/ && git pull && composer install && php artisan migrate --force"
+      - uses: actions/checkout@v2
+      - name: Install PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+      - name: Install dependencies
+        run: composer install
+      - name: Run tests
+        run: vendor/bin/phpunit
