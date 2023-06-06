@@ -2,9 +2,9 @@ name: laravelCICD
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   Deploy-Project:
@@ -27,7 +27,7 @@ jobs:
 
     - name: Run tests
       run: vendor/bin/phpunit
-      
+
     - name: Deploy to server
       uses: appleboy/scp-action@master
       with:
